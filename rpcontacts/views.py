@@ -43,10 +43,13 @@ class Window(QMainWindow):
         self.table.setModel(self.contactsModel.model)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.resizeColumnsToContents()
-        # Create Buttons
+        # Create Button
         self.addButton = QPushButton("Add..")
         self.addButton.clicked.connect(self.openAddDialog)
+        # Delete Button
         self.deleteButton = QPushButton("Delete")
+        self.deleteButton.clicked.connect(self.deleteContact)
+
         self.clearAllButton = QPushButton("Clear All")
         # Layout the GUI
         layout = QVBoxLayout()
@@ -64,13 +67,26 @@ class Window(QMainWindow):
             self.contactsModel.addContact(dialog.data)
             self.table.resizeColumnsToContents()
 
+    def deleteContact(self):
+        """Delete the selected contact from the database"""
+        row = self.table.currentIndex().row()
+        if row < 0:
+            return
+        messageBox = QMessageBox.warning(
+            self,
+            "Warning!",
+            "Do you want to remove the selected contact ?",
+            QMessageBox.Ok | QMessageBox.Cancel,
+        )
+        if messageBox == QMessageBox.Ok:
+            self.contactsModel.deleteContact(row)
 
 
 class AddDialog(QDialog):
     """Add Contact dialog."""
     def __init__(self, parent=None):
         """Initializer."""
-        super.__init__(parent=parent)
+        super().__init__(parent=parent)
         self.setWindowTitle("Add Contact")
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -91,7 +107,7 @@ class AddDialog(QDialog):
         layout = QFormLayout()
         layout.addRow("Name:", self.nameField)
         layout.addRow("Job:", self.jobField)
-        layout.addRow("Name:", self.emailField)
+        layout.addRow("Email:", self.emailField)
         self.layout.addLayout(layout)
         # Add standard buttons to the dialog and connect them
         self.buttonsBox = QDialogButtonBox(self)
@@ -113,7 +129,8 @@ class AddDialog(QDialog):
                     "Error!"
                     f"You must provide a contact 's {field.objectName()}"
                 )
-                self.data = None #Reset data
+                # Reset data
+                self.data = None
                 return
             self.data.append(field.text())
         if not self.data:
